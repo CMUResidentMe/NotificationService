@@ -3,22 +3,18 @@ dotenv.config();
 
 class SocketManager {
 
-  constructor() {
-    this.socketMap = {};
-    this.userMap = {}; 
+  constructor(io) {
+    this.userMap = {};
   }
 
   async handleSocketMiddleware(socket, next) {
-    const userUUID = socket.handshake.auth.userUUID;
+    const userUUID = socket.handshake.auth.token;
+    console.log(`handleSocketMiddleware: ${userUUID}`);
+    //get UUID from toekn
     if (userUUID != null && userUUID != "undefined") { 
       socket.userUUID = userUUID;
-      socket.topic = userTopic;
     }else{
       return;
-    }
-    const userTopic = socket.handshake.auth.topic;
-    if (userTopic != null && userTopic != "undefined") { 
-      socket.topic = userTopic;
     }
     next();
   }
@@ -28,28 +24,23 @@ class SocketManager {
     if (userUUID == null || userUUID == "undefined") {
       return;
     }
+    this.io = io;
     this.addUser(userUUID, socket);
     socket.on("disconnect", () => this.handleDisconnect(socket, io));
   }
 
   async addUser(userUUID, socket) {
     // Add user to socket map
-    let socketId = socket.id;
-    if(!(userUUID in userMap)){
-      this.userMap[userUUID] = {};
-      this.userMap[userUUID]['sockets'] = new Set();
-      this.userMap[userUUID]['topics'] = new Set();
-      this.userMap[userUUID]['topics'].add(process.env.DEFAULT_TOPICS);
+    if(!(userUUID in this.userMap)){
+      this.userMap[userUUID] = new Set();
     }
-    this.socketMap[socketId] = socket;
-    this.userMap[userUUID].add(socketId);
+    this.userMap[userUUID].add(socket.id);
   }
 
   async handleDisconnect(socket) {
     console.log(`${socket.id} disconnected from socketHandler`);
     try {
       removeUser(socket);
-      await updateUserLeaveAndNotifyOthers(username, io, socket.token);
     } catch (error) {
       console.error("Error handling disconnect:", error);
     }
@@ -57,23 +48,20 @@ class SocketManager {
 
   async removeUser(socket) {
     // Remove user from socket map
-    if(socket.userUUID in this.userMap){
-      this.userMap[userUUID]['sockets'].delete(socket.id);
-      delete this.socketMap[socket.id];
-      if(this.userMap[userUUID]['sockets'].size == 0){
-        delete this.userMap[userUUID];
-      }
+    if((socket.userUUID in this.userMap) && this.userMap[userUUID].has(socket.id)){
+      this.userMap[userUUID].delete(socket.id);
+    }
+    if(this.userMap[userUUID].size == 0){
+      delete this.userMap[userUUID];
     }
   }
 
-  async emitMessage(userUUID, topic, msg){
+  async emitUserMessage(userUUID, topic, msg){
     let sidList = this.userMap[userUUID];
     if(sidList){
       sidList.forEach((sid) => {
-        let socket = this.socketMap[sid];
-        if(socket.topic == topic || socket.topic == 'ALL'){
-          socket.emit(messageType, msg);
-        }
+        console.log(msg['msgType']);
+        this.io.to(sid).emit(msg['msgType'], msg);
       });
     }
   }
