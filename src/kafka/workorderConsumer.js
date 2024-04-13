@@ -10,24 +10,16 @@ const consumeWorkOrderEvents = async () => {
   const consumer = kafka.consumer({ groupId: process.env.WORKORDER_TOPIC_GROUPID });
   await consumer.connect();
   await consumer.subscribe({ topic: process.env.WORKORDER_TOPIC, fromBeginning: true });
-  var wkBroadCastGroup = null;
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       const eventData = JSON.parse(message.value.toString("UTF-8"));
       console.log(eventData);
       if('workOrder' in eventData){
-        socketManager.emitUserMessage(eventData['workOrder']['owner'], topic, eventData);
+        socketManager.emitUserMessage(eventData['workOrder']['owner'], eventData);
         if(eventData['workOrder']['assignedStaff'] != null && eventData['workOrder']['assignedStaff'] != undefined){
-          socketManager.emitUserMessage(eventData['workOrder']['assignedStaff'], topic, eventData);
+          socketManager.emitUserMessage(eventData['workOrder']['assignedStaff'], eventData);
         }
-        if(wkBroadCastGroup != null){
-          for(let staffUuid of wkBroadCastGroup){
-            socketManager.emitUserMessage(staffUuid, topic, eventData);
-          }
-        }
-      }else if('broadCastGroup' in eventData){
-        wkBroadCastGroup = eventData['broadCastGroup'];
       }else{
         console.log("unsupport workoder message");
         console.log(eventData);

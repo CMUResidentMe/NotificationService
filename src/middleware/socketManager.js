@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import jwt from 'jsonwebtoken';
 dotenv.config();
 
 class SocketManager {
@@ -8,15 +9,23 @@ class SocketManager {
   }
 
   async handleSocketMiddleware(socket, next) {
-    const userUUID = socket.handshake.auth.token;
-    console.log(`handleSocketMiddleware: ${userUUID}`);
-    //get UUID from toekn
-    if (userUUID != null && userUUID != "undefined") { 
-      socket.userUUID = userUUID;
-    }else{
+    const token = socket.handshake.auth.token;
+    if (token == null || token == "undefined") { 
       return;
     }
-    next();
+    try{
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userUUID = decoded.id;
+      if (userUUID != null && userUUID != "undefined") { 
+        socket.userUUID = userUUID;
+      }else{
+        return;
+      }
+      next();
+    } catch (error) {
+      console.error("Error: error token", token);
+      return;
+    }
   }
 
   async socketHandler(socket, io) {
@@ -56,7 +65,7 @@ class SocketManager {
     }
   }
 
-  async emitUserMessage(userUUID, topic, msg){
+  async emitUserMessage(userUUID, msg){
     let sidList = this.userMap[userUUID];
     if(sidList){
       sidList.forEach((sid) => {
