@@ -9,6 +9,7 @@ import { socketManager } from "./middleware/socketManager.js";
 import { consumeWorkOrderEvents } from './kafka/workorderConsumer.js'
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, 
   {cors: {
