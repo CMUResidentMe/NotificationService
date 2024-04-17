@@ -49,7 +49,7 @@ class SocketManager {
   async handleDisconnect(socket) {
     console.log(`${socket.id} disconnected from socketHandler`);
     try {
-      removeUser(socket);
+      this.removeUser(socket);
     } catch (error) {
       console.error("Error handling disconnect:", error);
     }
@@ -57,11 +57,11 @@ class SocketManager {
 
   async removeUser(socket) {
     // Remove user from socket map
-    if((socket.userUUID in this.userMap) && this.userMap[userUUID].has(socket.id)){
-      this.userMap[userUUID].delete(socket.id);
+    if((socket.userUUID in this.userMap) && this.userMap[socket.userUUID].has(socket.id)){
+      this.userMap[socket.userUUID].delete(socket.id);
     }
-    if(this.userMap[userUUID].size == 0){
-      delete this.userMap[userUUID];
+    if(this.userMap[socket.userUUID].size == 0){
+      delete this.userMap[socket.userUUID];
     }
   }
 
