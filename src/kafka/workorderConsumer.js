@@ -16,8 +16,7 @@ const consumeWorkOrderEvents = async () => {
       const eventData = JSON.parse(message.value.toString("UTF-8"));
       console.log(eventData);
       if('workOrder' in eventData){
-        const message = `Update to Work Order #${eventData['workOrder']['semanticId']}: ${eventData['changeDescription']}`;
-        socketManager.emitUserMessage(eventData['workOrder']['owner'], message);
+        socketManager.emitUserMessage(eventData['workOrder']['owner'], eventData);
         if(eventData['workOrder']['assignedStaff'] != null && eventData['workOrder']['assignedStaff'] != undefined){
           socketManager.emitUserMessage(eventData['workOrder']['assignedStaff'], eventData);
         }
