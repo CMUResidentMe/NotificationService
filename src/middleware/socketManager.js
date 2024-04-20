@@ -69,7 +69,7 @@ class SocketManager {
     let sidList = this.userMap[userUUID];
     if(sidList){
       sidList.forEach((sid) => {
-        console.log(msg['msgType']);
+        console.log(`emit ${msg['msgType']} to ${userUUID}`);
         this.io.to(sid).emit(msg['msgType'], msg);
       });
     }
