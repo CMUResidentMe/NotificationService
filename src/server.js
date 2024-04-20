@@ -6,8 +6,10 @@ import { Server } from "socket.io";
 import http from "http";
 import cors from "cors";
 import { socketManager } from "./middleware/socketManager.js";
-import { consumeWorkOrderEvents } from './kafka/workorderConsumer.js'
+import { consumeEvents } from './kafka/NotiConsumer.js'
+import { notificationDB } from "./data_access_layer/mongooseConnect.js";
 
+await notificationDB.initializeDatabase();
 const app = express();
 app.use(cors());
 const server = http.createServer(app);
@@ -17,7 +19,8 @@ const io = new Server(server,
     methods: ["GET", "POST"]
   }});
 
-process.on("SIGINT", function () {
+process.on("SIGINT", async function () {
+  await notificationDB.disconnectDatabase();
   console.log("notification server exit!");
   process.exit(0);
 });
@@ -25,7 +28,7 @@ process.on("SIGINT", function () {
 io.use(socketManager.handleSocketMiddleware);
 io.on("connection", (socket) => socketManager.socketHandler(socket, io));
 
-consumeWorkOrderEvents().catch(console.error);
+consumeEvents().catch(console.error);
 
 app.use(cors());
 // error handler

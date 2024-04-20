@@ -1,5 +1,10 @@
 import dotenv from "dotenv";
 import jwt from 'jsonwebtoken';
+import {
+  createRmNotification,
+  getDelRmNotificationsByOwner,
+} from '../data_access_layer/RmNotificationDAL.js';
+import { generateSequence } from "../entity/NotificationSequence.js"
 dotenv.config();
 
 class SocketManager {
@@ -23,7 +28,7 @@ class SocketManager {
       }
       next();
     } catch (error) {
-      console.error("Error: error token", token);
+      //console.error(error);
       return;
     }
   }
@@ -33,6 +38,7 @@ class SocketManager {
     if (userUUID == null || userUUID == "undefined") {
       return;
     }
+    console.log(userUUID + " connected");
     this.io = io;
     this.addUser(userUUID, socket);
     socket.on("disconnect", () => this.handleDisconnect(socket, io));
@@ -44,6 +50,11 @@ class SocketManager {
       this.userMap[userUUID] = new Set();
     }
     this.userMap[userUUID].add(socket.id);
+    //send stored notis and delete them
+    let notis = await getDelRmNotificationsByOwner(userUUID);
+    notis.forEach(element => {
+      socket.emit(element.notificationType, element);
+    });
   }
 
   async handleDisconnect(socket) {
@@ -66,12 +77,19 @@ class SocketManager {
   }
 
   async emitUserMessage(userUUID, msg){
+    let notiSeq = await generateSequence("RmNotificationSeq");
+    msg.notificationID = notiSeq.seq;
     let sidList = this.userMap[userUUID];
-    if(sidList){
+    if(sidList && sidList.size > 0){
       sidList.forEach((sid) => {
-        console.log(`emit ${msg['msgType']} to ${userUUID}`);
-        this.io.to(sid).emit(msg['msgType'], msg);
+        console.log(`emit ${msg['notificationType']} to ${userUUID}`);
+        this.io.to(sid).emit(msg['notificationType'], msg);
       });
+    }else{
+      //store to DB for later emit
+      //(notificationType, eventTime, owner,  message)
+      console.log("store notification to DB for later send");
+      createRmNotification(msg.notificationID, msg.notificationType, msg.eventTime, msg.owner, msg.message, msg.sourceID);
     }
   }
 }
