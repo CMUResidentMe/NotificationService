@@ -19,6 +19,10 @@ const setupConsumer = async (groupId, topic) => {
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       const eventData = JSON.parse(message.value.toString("UTF-8"));
+      console.log(
+        "A new message has been received!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ",
+        eventData
+      );
       if (
         eventData.notificationType !== null &&
         eventData.notificationType !== undefined
@@ -53,6 +57,11 @@ const consumeEvents = async () => {
     )
     .catch((error) =>
       console.error("Failed to start Communication Board Consumer:", error)
+    );
+  setupConsumer(process.env.ROOMBOOK_TOPIC_GROUPID, process.env.ROOMBOOK_TOPIC)
+    .then(() => console.log("Room BOOK Consumer started successfully"))
+    .catch((error) =>
+      console.error("Failed to start ROOM BOOK Consumer:", error)
     );
 };
 
