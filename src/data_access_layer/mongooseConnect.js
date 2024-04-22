@@ -1,13 +1,14 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 dotenv.config();
 
 // Abstract Strategy
 class DatabaseStrategy {
-  connect(connectionString) { }
-  disconnect() { }
+  connect(connectionString) {}
+  disconnect() {}
 }
 
+// Concrete Strategy
 class MainDatabase extends DatabaseStrategy {
   async connect(connectionString) {
     console.log("connectionString:" + connectionString);
@@ -19,6 +20,7 @@ class MainDatabase extends DatabaseStrategy {
   }
 }
 
+// Context
 class DatabaseContext {
   constructor(strategy) {
     this.strategy = strategy;
@@ -39,21 +41,21 @@ class DatabaseContext {
 
 class NotificationDB {
   databaseContext = null;
-
+  // Strategy pattern to connect to the database
   async initializeDatabase() {
     try {
       this.databaseContext = new DatabaseContext(new MainDatabase());
       await this.databaseContext.connect(process.env.MONGODB_URI);
-      return this.databaseContext; // <-- Return the context 
+      return this.databaseContext; // <-- Return the context
     } catch (err) {
       throw err;
     }
   }
-
+  // Strategy pattern to disconnect from the database
   async disconnectDatabase() {
     try {
       await this.databaseContext.disconnect();
-      return this.databaseContext; // <-- Return the context 
+      return this.databaseContext; // <-- Return the context
     } catch (err) {
       throw err;
     }
