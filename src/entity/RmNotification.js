@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// The schema for the RmNotification model
 const RmNotificationSchema = new mongoose.Schema(
   {
     notificationID: { type: String },
@@ -14,6 +15,7 @@ const RmNotificationSchema = new mongoose.Schema(
   }
 );
 
+// Create the RmNotification model
 const RmNotification = mongoose.model("RmNotification", RmNotificationSchema);
 
 export default RmNotification;
