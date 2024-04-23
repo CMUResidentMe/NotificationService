@@ -63,6 +63,13 @@ const consumeEvents = async () => {
     .catch((error) =>
       console.error("Failed to start ROOM BOOK Consumer:", error)
     );
+
+  setupConsumer(process.env.MARKET_PLACE_TOPIC_GROUPID, process.env.MARKET_PLACE_TOPIC)
+      .then(() => console.log("Market Place Consumer started successfully"))
+      .catch((error) =>
+          console.error("Failed to start Market Place Consumer:", error)
+      );
+
 };
 
 export { consumeEvents };
