@@ -2,13 +2,11 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Abstract Strategy
 class DatabaseStrategy {
   connect(connectionString) {}
   disconnect() {}
 }
 
-// Concrete Strategy
 class MainDatabase extends DatabaseStrategy {
   async connect(connectionString) {
     console.log("connectionString:" + connectionString);
@@ -41,7 +39,6 @@ class DatabaseContext {
 
 class NotificationDB {
   databaseContext = null;
-  // Strategy pattern to connect to the database
   async initializeDatabase() {
     try {
       this.databaseContext = new DatabaseContext(new MainDatabase());
@@ -51,7 +48,7 @@ class NotificationDB {
       throw err;
     }
   }
-  // Strategy pattern to disconnect from the database
+
   async disconnectDatabase() {
     try {
       await this.databaseContext.disconnect();

@@ -42,6 +42,14 @@ class SocketManager {
     console.log(userUUID + " connected");
     this.io = io;
     this.addUser(userUUID, socket);
+    socket.on("ResidentME", () => {
+      console.log("received ResidentME");
+      this.sendBufferNotification(socket);
+    });
+    socket.on("UnResidentME", () => {
+      console.log("received UnResidentME");
+      delete this.userMap[socket.userUUID];
+    });
     socket.on("disconnect", () => this.handleDisconnect(socket, io));
   }
 
@@ -52,9 +60,12 @@ class SocketManager {
       this.userMap[userUUID] = new Set();
     }
     this.userMap[userUUID].add(socket.id);
-    //send stored notis and delete them
-    let notis = await getDelRmNotificationsByOwner(userUUID);
+  }
+
+  async sendBufferNotification (socket) {
+    let notis = await getDelRmNotificationsByOwner(socket.userUUID);
     notis.forEach((element) => {
+      console.log(`${socket.userUUID} reconnected, send buffered notifications.`);
       socket.emit(element.notificationType, element);
     });
   }
@@ -76,10 +87,14 @@ class SocketManager {
       socket.userUUID in this.userMap &&
       this.userMap[socket.userUUID].has(socket.id)
     ) {
+      console.log(`${socket.userUUID} front disconnected.`);
       this.userMap[socket.userUUID].delete(socket.id);
     }
-    if (this.userMap[socket.userUUID].size == 0) {
+    if ((socket.userUUID in this.userMap) && (this.userMap[socket.userUUID].size === 0)) {
+      console.log(`${socket.userUUID} is removed.`);
       delete this.userMap[socket.userUUID];
+    }else if(socket.userUUID in this.userMap){
+      console.log(`${socket.userUUID} has other connected socket, so will not be removed.`);
     }
   }
 
