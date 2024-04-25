@@ -78,7 +78,8 @@ class SocketManager {
     ) {
       this.userMap[socket.userUUID].delete(socket.id);
     }
-    if (this.userMap[socket.userUUID].size == 0) {
+    if (socket.userUUID in this.userMap && 
+      this.userMap[socket.userUUID].size == 0) {
       delete this.userMap[socket.userUUID];
     }
   }
